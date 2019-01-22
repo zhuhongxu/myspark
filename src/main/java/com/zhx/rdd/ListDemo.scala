@@ -1,5 +1,6 @@
 package com.zhx.rdd
 
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /*
@@ -13,7 +14,6 @@ object ListDemo {
     //独立应用中获取sparkContext的方法：
     val conf = new SparkConf().setMaster("local").setAppName("myspark")
     val sc = new SparkContext(conf)
-
 //    testWordCount(sc)
 //    testFilter(sc)
 //    testUnion(sc)
@@ -22,10 +22,27 @@ object ListDemo {
 //    testMap(sc)
 //    testFlatMap(sc)
 //    testReduce(sc)
-      testAggregate(sc)
-
+//    testAggregate(sc)
+      testPersist(sc)
   }
 
+
+  /**
+    * 测试持久化
+    */
+  def testPersist(sc: SparkContext): Unit ={
+    val lines = sc.textFile("src/main/java/com/zhx/rdd/testTxt")
+    val transform = lines.flatMap(_.split(" "))
+    transform.persist(StorageLevel.DISK_ONLY)
+    println("count: " + transform.count())
+    println("collection..........")
+    transform.collect().foreach(println)
+  }
+
+  /**
+    * 测试聚集
+    * @param sc
+    */
   def testAggregate(sc: SparkContext): Unit ={
     val input = sc.parallelize(List(1, 2, 3, 4, 5, 6, 7, 8), 3)
     println(input.aggregate(1)(_+_, _+_))
@@ -111,7 +128,4 @@ object ListDemo {
     lines.flatMap(_.split(" ")).map((_ , 1)).reduceByKey(_ + _).foreach(println)
     sc.stop()
   }
-
-
-
 }
